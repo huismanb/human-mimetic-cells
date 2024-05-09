@@ -1,6 +1,5 @@
 #####
-# Preprocessing/merge of zebrafish data from Sara Rubin
-# Adapt from 20230127_human_mimetic_cell_forBrooke_v2-see_if_can_get_DAMs_output.R
+# Preprocessing of zebrafish data
 
 #####
 #start
