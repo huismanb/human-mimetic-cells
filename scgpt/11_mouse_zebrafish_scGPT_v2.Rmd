@@ -1,0 +1,208 @@
+---
+title: "mouse_zebrafish_scGPT"
+author: "Yuan Fang"
+date: "12/27/2023"
+output: html_document
+edited by Brooke 2024/03/06
+---
+
+```{r}
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(ggrepel)
+library(readxl)
+options(bitmapType='cairo')
+```
+
+*mouse part 1*
+```{r}
+# Load the dataset
+sc.data <- readRDS(
+  file = "/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/mouse/meclo_seurat_table_mouse-humanlabels_mimeticsonly-20240306.rds")
+sc.data
+```
+
+```{r}
+# Initialize the Seurat object with the raw (non-normalized data). Load in the UMI matrix
+sc_rna <- CreateSeuratObject(counts = sc.data, project = "scgpt_mouse", min.cells = 3, min.features = 200)
+sc_rna
+```
+
+```{r}
+sc_rna@assays[["RNA"]]@layers[["counts"]]
+```
+
+*QC*
+```{r}
+# Visualize QC metrics as a violin plot
+VlnPlot(sc_rna, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, pt.size = 0.01)
+```
+
+*Normalization*
+```{r}
+sc_cleaned <- NormalizeData(sc_rna, normalization.method = "LogNormalize", scale.factor = 10000)
+```
+
+```{r}
+# Filtered raw counts (UMI)
+sc_cleaned@assays[["RNA"]]@layers[["counts"]]
+```
+
+```{r}
+sc_cleaned <- FindVariableFeatures(sc_cleaned, selection.method = "vst", nfeatures = 2000)
+```
+
+```{r}
+all.genes <- rownames(sc_cleaned)
+sc_cleaned <- ScaleData(sc_cleaned, features = all.genes)
+```
+
+```{r}
+sc_cleaned <- RunPCA(sc_cleaned, features = VariableFeatures(object = sc_cleaned))
+```
+
+```{r}
+saveRDS(sc_cleaned, 
+        file = "/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/mouse/meclo_seurat_table_mouse-humanlabels_mimeticsonly-20240306_cleaned.rds")
+```
+
+
+```{r}
+sc_cleaned <- JackStraw(sc_cleaned, num.replicate = 100, dims = 50)
+sc_cleaned <- ScoreJackStraw(sc_cleaned, dims = 1:50)
+```
+
+```{r}
+JackStrawPlot(sc_cleaned, dims = 1:50)
+ggplot2::ggsave("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/mouse/JackStrawPlot.pdf", height = 8, width = 14)
+```
+
+```{r}
+ElbowPlot(sc_cleaned, ndims = 50)
+ggplot2::ggsave("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/mouse/ElbowPlot.pdf", height = 5, width = 6)
+```
+
+```{r}
+sc_cleaned <- FindNeighbors(sc_cleaned, dims = 1:40, k.param = 20) 
+```
+
+```{r}
+sc_cleaned <- FindClusters(sc_cleaned, resolution = 1.4)
+```
+
+```{r}
+sc_cleaned <- RunUMAP(sc_cleaned, dims = 1:40)
+```
+
+```{r}
+DimPlot(sc_cleaned, reduction = "umap", label = TRUE)
+ggplot2::ggsave("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/mouse/DimPlot_UMAP_res1.4.pdf", height = 5, width = 6)
+```
+
+```{r}
+DimPlot(sc_cleaned, reduction = "umap", label = FALSE, cols = DiscretePalette(16, palette = "glasbey", shuffle = FALSE))
+ggplot2::ggsave("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/mouse/DimPlot_UMAP_res1.4_newcolor.pdf", height = 5, width = 6)
+```
+
+```{r}
+saveRDS(sc_cleaned, 
+        file = "/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/mouse/meclo_seurat_table_mouse-humanlabels_mimeticsonly-20240306_cleaned.rds")
+```
+
+*zebrafish part 1*
+```{r}
+# Load the dataset
+sc.data <- readRDS(file = "/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/zebrafish/zebrafish_mec_aftercut5-humanlabels_mimeticsonly-20240306.rds")
+sc.data
+```
+
+```{r}
+# Initialize the Seurat object with the raw (non-normalized data). Load in the UMI matrix
+sc_rna <- CreateSeuratObject(counts = sc.data, project = "scgpt_zebrafish", min.cells = 3, min.features = 200)
+
+sc_rna
+```
+
+```{r}
+sc_rna@assays[["RNA"]]@layers[["counts"]]
+```
+
+*QC*
+```{r}
+# Visualize QC metrics as a violin plot
+VlnPlot(sc_rna, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, pt.size = 0.01)
+```
+
+*Normalization*
+```{r}
+sc_cleaned <- NormalizeData(sc_rna, normalization.method = "LogNormalize", scale.factor = 10000)
+```
+
+```{r}
+# Filtered raw counts (UMI)
+sc_cleaned@assays[["RNA"]]@layers[["counts"]]
+```
+
+```{r}
+sc_cleaned <- FindVariableFeatures(sc_cleaned, selection.method = "vst", nfeatures = 2000)
+```
+
+```{r}
+all.genes <- rownames(sc_cleaned)
+sc_cleaned <- ScaleData(sc_cleaned, features = all.genes)
+```
+
+```{r}
+sc_cleaned <- RunPCA(sc_cleaned, features = VariableFeatures(object = sc_cleaned))
+```
+
+```{r}
+saveRDS(sc_cleaned, 
+        file = "/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/zebrafish/zebrafish_mec_aftercut5-humanlabels_mimeticsonly-20240306_cleaned.rds")
+```
+
+
+```{r}
+sc_cleaned <- JackStraw(sc_cleaned, num.replicate = 100, dims = 50)
+sc_cleaned <- ScoreJackStraw(sc_cleaned, dims = 1:50)
+```
+
+```{r}
+JackStrawPlot(sc_cleaned, dims = 1:50)
+ggplot2::ggsave("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/zebrafish/JackStrawPlot.pdf", height = 8, width = 14)
+```
+
+```{r}
+ElbowPlot(sc_cleaned, ndims = 50)
+ggplot2::ggsave("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/zebrafish/ElbowPlot.pdf", height = 5, width = 6)
+```
+
+```{r}
+sc_cleaned <- FindNeighbors(sc_cleaned, dims = 1:40, k.param = 20) 
+```
+
+```{r}
+sc_cleaned <- FindClusters(sc_cleaned, resolution = 1.6) 
+```
+
+```{r}
+sc_cleaned <- RunUMAP(sc_cleaned, dims = 1:40)
+```
+
+```{r}
+DimPlot(sc_cleaned, reduction = "umap", label = TRUE)
+ggplot2::ggsave("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/zebrafish/DimPlot_UMAP_res1.6.pdf", height = 5, width = 6)
+```
+
+
+```{r}
+DimPlot(sc_cleaned, reduction = "umap", label = FALSE, cols = DiscretePalette(20, palette = "glasbey", shuffle = FALSE))
+ggplot2::ggsave("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/zebrafish/DimPlot_UMAP_res1.6_newcolor.pdf", height = 5, width = 6)
+```
+
+```{r}
+saveRDS(sc_cleaned, 
+        file = "/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/zebrafish/zebrafish_mec_aftercut5-humanlabels_mimeticsonly-20240306_cleaned.rds")
+```
