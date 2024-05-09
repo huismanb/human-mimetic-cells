@@ -1,0 +1,37 @@
+---
+title: "human_mTEC_scRNA_seq_preprocessing"
+author: "Yuan Fang"
+date: "10/17/2023"
+output: html_document
+edited: "Brooke Huisman 2/21/24; 3/9/24"
+---
+
+```{r}
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(ggrepel)
+library(readxl)
+options(bitmapType='cairo')
+```
+
+*Human*
+```{r}
+sc_data <- readRDS("/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/human_data/meclo_ht2-ht6_seurat_table_20240309_labelled-mimeticsonly.rds")
+sc_data@meta.data
+```
+
+```{r}
+sc_data@meta.data %>% group_by(orig.ident) %>% summarise(count=n())
+```
+
+```{r}
+sc_data@meta.data['celltype'] <- as.character(Idents(sc_data))
+sc_data@meta.data
+```
+
+```{r}
+saveRDS(sc_data, file = "/n/groups/cbdm_lab/brh040/analysis/scGPT/mimetics-only_version/human_data/meclo_ht2-ht6_seurat_table_20240309_labelled-mimeticsonly_preprocessed.rds")
+```
+
